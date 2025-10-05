@@ -27,4 +27,15 @@ Thumbs.db
 
 # IDE
 .vscode/
-.idea/" > .gitignore
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/

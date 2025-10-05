@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { findPatientByCMU } from '../../data/patients';
 import AnalysisSelector from "../../components/consultation/NewConsultation/AnalyseSelector";
 import DiagnosticComponent from "../../components/consultation/NewConsultation/DiagnosticComponent";
 import DiseaseRiskDisplay from "../../components/consultation/NewConsultation/DiseaseRiskDisplay";
@@ -19,72 +18,81 @@ const PatientSearch = ({ onPatientFound }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const searchPatient = async (e) => {
+  const searchPatient = (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    try {
-      const q = query(
-        collection(db, 'patients'),
-        where('cmuNumber', '==', cmuNumber)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
+    // Simule un délai de recherche pour une meilleure UX
+    setTimeout(() => {
+      const patient = findPatientByCMU(cmuNumber);
+
+      if (!patient) {
         setError('Aucun patient trouvé avec ce numéro CMU');
+        setLoading(false);
         return;
       }
 
-      const patientData = querySnapshot.docs[0].data();
-      onPatientFound({
-        id: querySnapshot.docs[0].id,
-        ...patientData
-      });
-    } catch (err) {
-      setError('Erreur lors de la recherche du patient');
-      console.error('Erreur:', err);
-    } finally {
+      onPatientFound(patient);
       setLoading(false);
-    }
+    }, 500);
   };
 
   return (
-    <div className="bg-white rounded-xl shadow p-6 mb-6">
-      <h2 className="text-xl font-bold mb-4">Rechercher un patient</h2>
-      <form onSubmit={searchPatient} className="space-y-4">
-        <div>
-          <label htmlFor="cmuNumber" className="block text-sm font-medium text-gray-700">
-            Numéro CMU
-          </label>
-          <input
-            id="cmuNumber"
-            type="text"
-            value={cmuNumber}
-            onChange={(e) => setCmuNumber(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Entrez le numéro CMU"
-            required
-          />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+      {/* Header simplifié */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-[1800px] mx-auto px-4 py-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-blue-900">
+            E-SANTE - Consultation Médicale
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            Système d'aide au diagnostic médical
+          </p>
         </div>
-        
-        {error && (
-          <div className="text-red-500 text-sm">
-            {error}
-          </div>
-        )}
-        
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full md:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-            loading ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          {loading ? 'Recherche...' : 'Rechercher'}
-        </button>
-      </form>
+      </div>
+
+      {/* Formulaire de recherche */}
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-xl font-bold mb-4 text-gray-800">Rechercher un patient</h2>
+          <form onSubmit={searchPatient} className="space-y-4">
+            <div>
+              <label htmlFor="cmuNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                Numéro CMU
+              </label>
+              <input
+                id="cmuNumber"
+                type="text"
+                value={cmuNumber}
+                onChange={(e) => setCmuNumber(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                placeholder="Ex: CMU123456"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Patients disponibles: CMU123456, CMU789012, CMU345678, CMU901234, CMU567890
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {loading ? 'Recherche en cours...' : 'Rechercher le patient'}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 };
