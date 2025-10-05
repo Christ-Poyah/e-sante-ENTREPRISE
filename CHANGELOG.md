@@ -14,7 +14,18 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Supprimé
 - Aucun
 
-Version 0.3.0
+## [1.0.0] - 2025-10-05
+
+### Modifié
+- Repositionnement des diagnostics et traitements dans le bloc principal en bas de page
+- Affichage automatique des suggestions de diagnostic et traitement sous forme de rectangles arrondis
+- Suppression de l'affichage des pourcentages et barres de progression pour les diagnostics
+- Simplification de l'interface : mise en page sur une seule colonne pour une meilleure lisibilité
+- Amélioration de l'UX avec un affichage cohérent des résultats sous forme de badges
+
+### Supprimé
+- Colonne latérale droite pour les résultats (diagnostics et traitements intégrés au flux principal)
+- Barres de progression et pourcentages dans l'affichage des diagnostics
 
 ## [0.2.0] - 2025-10-05
 
