@@ -6,6 +6,7 @@ from typing import List, Dict, Union, Optional
 import uvicorn
 from prediction.predictor import predict_disease_scores
 from prediction.treatment_predictor import predict_treatments
+from prediction.medication_predictor import suggest_medications
 
 class DetailOption(BaseModel):
     name: str
@@ -51,6 +52,43 @@ class TreatmentOutput(BaseModel):
     treatment: str
     posology: str
 
+class MedicationItem(BaseModel):
+    id: int
+    name: str
+    indication: str
+    dosage: str
+    category: str
+
+class MedicationOutput(BaseModel):
+    medications: List[MedicationItem]
+
+class MedicationInput(BaseModel):
+    symptoms: List[Symptom]
+    analyses: List[Analysis]
+
+class PatientInfo(BaseModel):
+    firstName: str
+    lastName: str
+    age: int
+    cmuNumber: str
+
+class PrescriptionInput(BaseModel):
+    patient: PatientInfo
+    diagnostic: str
+    treatment: str
+    posology: str
+    medications: List[MedicationItem]
+    consultationDate: str
+
+class PrescriptionOutput(BaseModel):
+    patient: PatientInfo
+    consultationDate: str
+    diagnostic: str
+    treatment: str
+    posology: str
+    medications: List[MedicationItem]
+    instructions: str
+
 app = FastAPI()
 
 app.add_middleware(
@@ -95,6 +133,37 @@ async def predict_treatment(input_data: DiagnosticInput, diagnostic: str):
             diagnostic=diagnostic,
             treatment=treatment.get("treatment", "Traitement non défini"),
             posology=treatment.get("posology", "Posologie non définie")
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/suggest-medications", response_model=MedicationOutput)
+async def get_medication_suggestions(input_data: MedicationInput):
+    """
+    Suggère des médicaments en fonction des symptômes et analyses du patient.
+    """
+    try:
+        medications = suggest_medications(input_data.symptoms, input_data.analyses)
+        return MedicationOutput(medications=medications)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/generate-prescription", response_model=PrescriptionOutput)
+async def generate_prescription(input_data: PrescriptionInput):
+    """
+    Génère une ordonnance médicale complète pour le patient.
+    """
+    try:
+        instructions = "Respecter strictement la posologie prescrite. En cas d'effets secondaires, consulter immédiatement un médecin."
+
+        return PrescriptionOutput(
+            patient=input_data.patient,
+            consultationDate=input_data.consultationDate,
+            diagnostic=input_data.diagnostic,
+            treatment=input_data.treatment,
+            posology=input_data.posology,
+            medications=input_data.medications,
+            instructions=instructions
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

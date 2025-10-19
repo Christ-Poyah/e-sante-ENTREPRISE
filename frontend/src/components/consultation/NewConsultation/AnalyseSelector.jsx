@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Section, Badge, AddButton } from '../../ui';
 
 const AnalysisSelector = ({
   availableAnalyses,
@@ -121,67 +122,45 @@ const AnalysisSelector = ({
   };
 
   return (
-    <div className="p-4">
-      <div className="flex">
-        <div className="w-1/6 pr-4">
-          <h2 className="text-xl font-bold">{title}</h2>
-        </div>
-        <div className="w-5/6">
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            {selectedAnalyses.map((analysis) => (
-              <div key={analysis.id} className="relative group">
-                <div className="flex items-center bg-blue-500 text-white rounded-full overflow-hidden">
-                  <input
-                    ref={(el) => inputRefs.current[analysis.id] = el}
-                    value={analysis.name}
-                    onChange={(e) => handleInputChange(e, analysis.id)}
-                    onFocus={() => {
-                      setActiveAnalysisId(analysis.id);
-                      setSuggestions(getFilteredSuggestions(''));
-                    }}
-                    onBlur={() => setTimeout(() => setActiveAnalysisId(null), 100)}
-                    placeholder={placeholders.name}
-                    className="bg-transparent placeholder-white placeholder-opacity-75 outline-none px-4 py-2 w-40"
-                  />
-                  <div className="w-32 px-4 py-2 border-l bg-white border-blue-400 border-2 rounded-r-full">
-                    {renderResultInput(analysis)}
-                  </div>
-                  <button 
-                    onClick={() => handleRemoveAnalysis(analysis.id)}
-                    className="hidden group-hover:block ml-2 text-white hover:text-red-300 transition-colors duration-200"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                {activeAnalysisId === analysis.id && suggestions.length > 0 && (
-                  <ul className="absolute z-10 w-40 mt-1 bg-white border border-gray-300 rounded shadow-lg">
-                    {suggestions.map(suggestion => (
-                      <li
-                        key={suggestion.id}
-                        onMouseDown={() => handleSelectSuggestion(suggestion, analysis.id)}
-                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                      >
-                        {suggestion.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+    <Section title={title}>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {selectedAnalyses.map((analysis) => (
+          <div key={analysis.id} className="relative flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <Badge variant="primary" onRemove={() => handleRemoveAnalysis(analysis.id)} className="flex items-center overflow-hidden">
+              <input
+                ref={(el) => inputRefs.current[analysis.id] = el}
+                value={analysis.name}
+                onChange={(e) => handleInputChange(e, analysis.id)}
+                onFocus={() => {
+                  setActiveAnalysisId(analysis.id);
+                  setSuggestions(getFilteredSuggestions(''));
+                }}
+                onBlur={() => setTimeout(() => setActiveAnalysisId(null), 100)}
+                placeholder={placeholders.name}
+                className="bg-transparent placeholder-white placeholder-opacity-75 outline-none w-32 sm:w-40 text-sm"
+              />
+              <div className="px-2 sm:px-4 py-1 sm:py-2 border-l bg-white border-blue-400 border-2 rounded-r-full w-24 sm:w-32">
+                {renderResultInput(analysis)}
               </div>
-            ))}
-            <button
-              onClick={handleAddAnalysis}
-              className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center text-xl font-bold"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
+            </Badge>
+            {activeAnalysisId === analysis.id && suggestions.length > 0 && (
+              <ul className="absolute z-10 w-32 sm:w-40 mt-12 sm:mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                {suggestions.map(suggestion => (
+                  <li
+                    key={suggestion.id}
+                    onMouseDown={() => handleSelectSuggestion(suggestion, analysis.id)}
+                    className="px-2 py-1 text-sm hover:bg-gray-100 cursor-pointer"
+                  >
+                    {suggestion.name}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </div>
+        ))}
+        <AddButton onClick={handleAddAnalysis} ariaLabel="Add analysis" />
       </div>
-    </div>
+    </Section>
   );
 };
 

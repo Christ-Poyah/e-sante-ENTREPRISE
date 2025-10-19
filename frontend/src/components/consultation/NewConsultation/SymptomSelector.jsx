@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Section, Badge, AddButton } from '../../ui';
 
 const SymptomSelector = ({ 
   initialSymptoms,
@@ -90,84 +91,59 @@ const SymptomSelector = ({
   };
 
   return (
-    <div className="p-4">
-      <div className="flex items-start">
-        <div className="w-1/6 pr-4">
-          <h2 className="text-xl font-bold mt-2">{title}</h2>
-        </div>
-        
-        <div className="w-5/6">
-          <div className="flex flex-wrap items-center gap-2 mb-4">
-            {selectedSymptoms.map((symptom) => (
-              <div key={symptom.id} className="flex items-center gap-2">
-                {/* Champ du symptôme */}
-                <div className="relative group">
-                  <div className="bg-blue-500 text-white px-4 py-2 rounded-full flex items-center">
-                    <input
-                      value={symptom.name}
-                      onChange={(e) => handleInputChange(e, symptom.id)}
-                      onFocus={() => handleInputFocus(symptom.id)}
-                      onBlur={() => handleInputBlur(symptom.id)}
-                      placeholder={placeholder}
-                      className="bg-transparent outline-none text-center placeholder-white placeholder-opacity-75 w-full"
-                      readOnly={symptom.symptomId !== null}
-                    />
-                    <button 
-                      onClick={() => handleRemoveSymptom(symptom.id)}
-                      className="hidden group-hover:block ml-2 text-white hover:text-red-300 transition-colors duration-200"
+    <Section title={title}>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {selectedSymptoms.map((symptom) => (
+          <div key={symptom.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <div className="relative group">
+              <Badge variant="primary" onRemove={() => handleRemoveSymptom(symptom.id)}>
+                <input
+                  value={symptom.name}
+                  onChange={(e) => handleInputChange(e, symptom.id)}
+                  onFocus={() => handleInputFocus(symptom.id)}
+                  onBlur={() => handleInputBlur(symptom.id)}
+                  placeholder={placeholder}
+                  className="bg-transparent outline-none text-center placeholder-white placeholder-opacity-75 w-full min-w-[100px]"
+                  readOnly={symptom.symptomId !== null}
+                />
+              </Badge>
+              {activeSymptomId === symptom.id && suggestions.length > 0 && (
+                <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+                  {suggestions.map(suggestion => (
+                    <li
+                      key={suggestion.id}
+                      onMouseDown={() => handleSelectSuggestion(suggestion, symptom.id)}
+                      className="px-2 py-1 text-sm hover:bg-gray-100 cursor-pointer"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  {activeSymptomId === symptom.id && suggestions.length > 0 && (
-                    <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded shadow-lg">
-                      {suggestions.map(suggestion => (
-                        <li 
-                          key={suggestion.id} 
-                          onMouseDown={() => handleSelectSuggestion(suggestion, symptom.id)}
-                          className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                        >
-                          {suggestion.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                      {suggestion.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-                {/* Détails supplémentaires */}
-                {symptom.symptomId !== null && symptom.details.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    {symptom.details.map(detail => (
-                      <div key={detail.id} className="border border-blue-500 bg-white rounded-full px-4 py-2">
-                        <select
-                          onChange={(e) => handleDetailChange(symptom.id, detail.id, e.target.value)}
-                          className="bg-transparent outline-none text-blue-500"
-                        >
-                          <option value="">{detail.name}</option>
-                          {detail.options.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            {symptom.symptomId !== null && symptom.details.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                {symptom.details.map(detail => (
+                  <Badge key={detail.id} variant="outline">
+                    <select
+                      onChange={(e) => handleDetailChange(symptom.id, detail.id, e.target.value)}
+                      className="bg-transparent outline-none text-blue-500 text-sm"
+                    >
+                      <option value="">{detail.name}</option>
+                      {detail.options.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </Badge>
+                ))}
               </div>
-            ))}
-            <button 
-              onClick={handleAddSymptom}
-              className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
+            )}
           </div>
-        </div>
+        ))}
+        <AddButton onClick={handleAddSymptom} ariaLabel="Add symptom" />
       </div>
-    </div>
+    </Section>
   );
 };
 

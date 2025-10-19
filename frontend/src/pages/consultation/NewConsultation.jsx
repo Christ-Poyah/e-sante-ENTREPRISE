@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { findPatientByCMU } from '../../data/patients';
 import AnalysisSelector from "../../components/consultation/NewConsultation/AnalyseSelector";
 import DiagnosticComponent from "../../components/consultation/NewConsultation/DiagnosticComponent";
 import DiseaseRiskDisplay from "../../components/consultation/NewConsultation/DiseaseRiskDisplay";
@@ -7,99 +6,32 @@ import SymptomSelector from "../../components/consultation/NewConsultation/Sympt
 import AntecedentSelector from '../../components/consultation/NewConsultation/AntecedentSelector';
 import DiseaseHistory from '../../components/consultation/NewConsultation/DiseaseHistory';
 import TreatmentComponent from "../../components/consultation/NewConsultation/TreatmentComponent";
-import ConsultationHeader from '../../components/consultation/NewConsultation/ConsultationHeader';
+import MedicationSuggestion from "../../components/consultation/NewConsultation/MedicationSuggestion";
+import PrescriptionModal from '../../components/consultation/NewConsultation/PrescriptionModal';
+import PatientSearch from '../../components/consultation/NewConsultation/PatientSearch';
+import Sidebar from '../../components/ui/Sidebar';
 
 
 
 
-// Composant de recherche patient
-const PatientSearch = ({ onPatientFound }) => {
-  const [cmuNumber, setCmuNumber] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const searchPatient = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    // Simule un délai de recherche pour une meilleure UX
-    setTimeout(() => {
-      const patient = findPatientByCMU(cmuNumber);
-
-      if (!patient) {
-        setError('Aucun patient trouvé avec ce numéro CMU');
-        setLoading(false);
-        return;
-      }
-
-      onPatientFound(patient);
-      setLoading(false);
-    }, 500);
-  };
-
+const ToggleButton = ({ enabled, onChange }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
-      {/* Header simplifié */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-[1800px] mx-auto px-4 py-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-blue-900">
-            E-SANTE - Consultation Médicale
-          </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Système d'aide au diagnostic médical
-          </p>
-        </div>
-      </div>
-
-      {/* Formulaire de recherche */}
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Rechercher un patient</h2>
-          <form onSubmit={searchPatient} className="space-y-4">
-            <div>
-              <label htmlFor="cmuNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                Numéro CMU
-              </label>
-              <input
-                id="cmuNumber"
-                type="text"
-                value={cmuNumber}
-                onChange={(e) => setCmuNumber(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-3 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-                placeholder="Ex: CMU123456"
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Patients disponibles: CMU123456, CMU789012, CMU345678, CMU901234, CMU567890
-              </p>
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${
-                loading ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
-            >
-              {loading ? 'Recherche en cours...' : 'Rechercher le patient'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
+    <button
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex items-center h-6 w-11 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        enabled ? 'bg-blue-600' : 'bg-gray-200'
+      }`}
+    >
+      <span className="sr-only">Toggle AI assistance</span>
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out ${
+          enabled ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
   );
 };
 
-
-
-// Composant d'affichage des informations patient
 const PatientInfo = ({ patient }) => {
   return (
     <div className="bg-white rounded-xl shadow p-6 mb-6">
@@ -127,12 +59,16 @@ const PatientInfo = ({ patient }) => {
 export default function NewConsultation() {
   const [isAIEnabled, setIsAIEnabled] = useState(true);
   const [patient, setPatient] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [medicalHistory, setMedicalHistory] = useState([]);
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [selectedAnalyses, setSelectedAnalyses] = useState([]);
   const [diagnostics, setDiagnostics] = useState([]);
   const [diseaseRisks, setDiseaseRisks] = useState([]);
   const [treatment, setTreatment] = useState(null);
+  const [medications, setMedications] = useState([]);
+  const [prescription, setPrescription] = useState(null);
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
   // Données statiques (gardez toutes les données existantes)
   const symptoms = [
@@ -295,7 +231,6 @@ export default function NewConsultation() {
     result: "Résultat"
   };
 
-  // Gardez toutes les fonctions existantes (sendDataToAPI, hasAllDetailsCompleted, etc.)
   const sendDataToAPI = async (formData) => {
       try {
         const response = await fetch('http://localhost:8001/diagnostic', {
@@ -308,13 +243,34 @@ export default function NewConsultation() {
             recentDiseases: patientData.recentDiseases
           })
         });
-  
+
         const data = await response.json();
         console.log("Réponse de l'API diagnostic :", data);
         setDiagnostics(data.diagnostics || []);
         setDiseaseRisks(data.diseaseRisks || []);
       } catch (error) {
         console.error('Erreur lors de l\'envoi des données:', error);
+      }
+    };
+
+    const fetchMedicationSuggestions = async (formData) => {
+      try {
+        const response = await fetch('http://localhost:8001/suggest-medications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            symptoms: formData.symptoms,
+            analyses: formData.analyses
+          })
+        });
+
+        const data = await response.json();
+        console.log("Réponse de l'API médicaments :", data);
+        setMedications(data.medications || []);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des médicaments:', error);
       }
     };
   
@@ -328,20 +284,21 @@ export default function NewConsultation() {
   
     useEffect(() => {
       if (!isAIEnabled) return;
-    
+
       const formData = {
         medicalHistory,
         symptoms: selectedSymptoms,
         analyses: selectedAnalyses
       };
-    
+
       const hasData = medicalHistory.length > 0 || selectedSymptoms.length > 0 || selectedAnalyses.length > 0;
       const historyComplete = areAllItemsComplete(medicalHistory);
       const symptomsComplete = areAllItemsComplete(selectedSymptoms);
       const analysesComplete = areAllItemsComplete(selectedAnalyses);
-    
+
       if (hasData && historyComplete && symptomsComplete && analysesComplete) {
         sendDataToAPI(formData);
+        fetchMedicationSuggestions(formData);
       }
     }, [medicalHistory, selectedSymptoms, selectedAnalyses, isAIEnabled]);
   
@@ -422,75 +379,157 @@ export default function NewConsultation() {
   
       fetchTreatment();
     }, [diagnostics, medicalHistory, selectedSymptoms, selectedAnalyses, isAIEnabled]);
-  
+
+    const handleGeneratePrescription = async () => {
+      if (!patient || !diagnostics || diagnostics.length === 0) {
+        alert("Veuillez d'abord établir un diagnostic pour le patient.");
+        return;
+      }
+
+      const prescriptionData = {
+        patient: {
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          age: patient.age,
+          cmuNumber: patient.cmuNumber
+        },
+        diagnostic: diagnostics[0]?.disease || "Non défini",
+        treatment: treatment?.treatment || "Traitement non défini",
+        posology: treatment?.posology || "Posologie non définie",
+        medications: medications,
+        consultationDate: new Date().toISOString()
+      };
+
+      try {
+        const response = await fetch('http://localhost:8001/generate-prescription', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(prescriptionData)
+        });
+
+        const data = await response.json();
+        setPrescription(data);
+        setShowPrescriptionModal(true);
+      } catch (error) {
+        console.error('Erreur lors de la génération de l\'ordonnance:', error);
+        alert('Erreur lors de la génération de l\'ordonnance');
+      }
+    };
 
     return (
-      <div className="bg-blue-100 h-full p-1 md:p-3 max-w-[1800px] mx-auto">
-        {!patient ? (
-          <PatientSearch onPatientFound={setPatient} />
-        ) : (
-          <>            
-              <div className="bg-blue-100 h-full p-4 md:p-6 max-w-[1800px] mx-auto">
-                <ConsultationHeader 
-                  isAIEnabled={isAIEnabled}
-                  onToggleAI={setIsAIEnabled}
-                />
-                
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Colonne du formulaire */}
-                  <div className="w-full lg:w-3/4 space-y-6">
-                    <div className="bg-white rounded-xl shadow p-4 md:p-6">
-                      {/* Section Symptômes */}
-                      <div className="mb-6">
-                        <SymptomSelector
-                          initialSymptoms={symptoms}
-                          onSymptomsChange={handleSymptomsChange}
-                        />
-                      </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+        <Sidebar
+          isCollapsed={isSidebarCollapsed}
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
 
-                      {/* Section Antécédents */}
-                      <div className="mb-6">
-                        <AntecedentSelector
-                          initialAntecedents={antecedents}
-                          onAntecedentsChange={handleMedicalHistoryChange}
-                        />
-                      </div>
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            isSidebarCollapsed ? 'ml-16' : 'ml-80'
+          }`}
+        >
+          <div className="bg-blue-100 min-h-screen p-4 md:p-6">
+            <div className="max-w-[1800px] mx-auto">
+              <div className="flex items-center justify-between mb-6 bg-white rounded-xl shadow p-4">
+                <h1 className="text-2xl font-bold text-blue-900">Consultation Médicale</h1>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-600 font-medium">
+                    Assistance IA
+                  </span>
+                  <ToggleButton
+                    enabled={isAIEnabled}
+                    onChange={setIsAIEnabled}
+                  />
+                </div>
+              </div>
 
-                      {/* Section Analyses */}
-                      <div className="mb-6">
-                        <AnalysisSelector
-                          availableAnalyses={analyses}
-                          onAnalysesChange={handleAnalysesChange}
-                          title="Analyses médicales :"
-                          placeholders={placeholders}
-                          translations={translations}
-                        />
-                      </div>
-
-                      {/* Affichage des risques de maladies */}
-                      <DiseaseRiskDisplay diseases={diseaseRisks} />
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="w-full lg:w-3/4 space-y-6">
+                  <div className="bg-white rounded-xl shadow p-4 md:p-6">
+                    <div className="mb-6">
+                      <SymptomSelector
+                        initialSymptoms={symptoms}
+                        onSymptomsChange={handleSymptomsChange}
+                      />
                     </div>
-                  </div>
 
-                  {/* Colonne de droite - Résultats */}
-                    <div className="w-full lg:w-1/4 space-y-4">
+                    <div className="mb-6">
+                      <AntecedentSelector
+                        initialAntecedents={antecedents}
+                        onAntecedentsChange={handleMedicalHistoryChange}
+                      />
+                    </div>
+
+                    <div className="mb-6">
+                      <AnalysisSelector
+                        availableAnalyses={analyses}
+                        onAnalysesChange={handleAnalysesChange}
+                        title="Analyses médicales :"
+                        placeholders={placeholders}
+                        translations={translations}
+                      />
+                    </div>
+
+                    <DiagnosticComponent
+                      diagnostics={diagnostics}
+                      title="Diagnostic suggéré :"
+                    />
+
+                    <MedicationSuggestion
+                      medications={medications}
+                      title="Médicaments recommandés :"
+                    />
+
+                    <DiseaseRiskDisplay diseases={diseaseRisks} />
+                  </div>
+                </div>
+
+                <div className="w-full lg:w-1/4 space-y-4">
+                  {!patient ? (
+                    <PatientSearch onPatientFound={setPatient} />
+                  ) : (
+                    <>
                       <PatientInfo patient={patient} />
-                      <DiseaseHistory 
+                      <DiseaseHistory
                         recentDiseases={patientData.recentDiseases}
                         title="Historique récent :"
-                      />
-                      <DiagnosticComponent
-                        diagnostics={diagnostics}
-                        title="Diagnostic suggéré :"
                       />
                       <TreatmentComponent
                         treatments={treatment ? [treatment] : []}
                         title="Traitement proposé :"
                       />
-                    </div>
+                    </>
+                  )}
+
+                  <div className="bg-white rounded-xl shadow p-4">
+                    <button
+                      onClick={handleGeneratePrescription}
+                      disabled={!patient || diagnostics.length === 0 || medications.length === 0}
+                      className={`w-full px-4 py-3 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 ${
+                        !patient || diagnostics.length === 0 || medications.length === 0
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Générer l'ordonnance
+                    </button>
+                  </div>
                 </div>
               </div>
-          </>
+            </div>
+          </div>
+        </div>
+
+        {showPrescriptionModal && (
+          <PrescriptionModal
+            prescription={prescription}
+            onClose={() => setShowPrescriptionModal(false)}
+          />
         )}
       </div>
     );

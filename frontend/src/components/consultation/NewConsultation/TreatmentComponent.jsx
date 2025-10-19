@@ -1,18 +1,17 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import debounce from 'lodash.debounce';
+import { Card, SectionTitle, SearchInput, ListItem, TextButton } from '../../ui';
 
 const TreatmentComponent = ({
   treatments,
   title = "Traitement proposé :",
   placeholder = "Rechercher un traitement..."
 }) => {
-  // Assurez-vous que treatments est toujours un tableau (même vide)
   const safeTreatments = treatments || [];
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showAll, setShowAll] = useState(false);
 
-  // Appel des Hooks inconditionnellement
   const debouncedSetSearchTerm = useCallback(
     debounce((value) => {
       setSearchTerm(value);
@@ -37,53 +36,42 @@ const TreatmentComponent = ({
     return showAll ? filteredTreatments : filteredTreatments.slice(0, 5);
   }, [filteredTreatments, showAll]);
 
-  // Maintenant, on peut effectuer un retour conditionnel
   if (safeTreatments.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow p-4">
-        <h2 className="text-lg font-semibold mb-4">{title}</h2>
-        <p className="text-gray-500 text-center">Aucun traitement disponible</p>
-      </div>
+      <Card padding="sm">
+        <SectionTitle size="md" className="mb-4">{title}</SectionTitle>
+        <p className="text-gray-500 text-center text-sm">Aucun traitement disponible</p>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow p-4">
-      <h2 className="text-lg font-semibold mb-4">{title}</h2>
+    <Card padding="sm">
+      <SectionTitle size="md" className="mb-4">{title}</SectionTitle>
 
-      {/* Champ de recherche */}
-      <input
-        type="text"
+      <SearchInput
         value={searchTerm}
         onChange={handleSearchChange}
         placeholder={placeholder}
-        className="w-full p-2 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+        className="mb-4"
       />
 
-      {/* Liste des traitements */}
       <ul className="space-y-3 mb-4">
         {displayedTreatments.map((item, index) => (
-          <li
-            key={index}
-            className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200"
-          >
-            <h3 className="font-medium">{item.diagnostic}</h3>
-            <p className="text-gray-700">{item.treatment}</p>
-            <p className="text-gray-500">{item.posology}</p>
-          </li>
+          <ListItem key={index}>
+            <h3 className="font-medium text-sm sm:text-base">{item.diagnostic}</h3>
+            <p className="text-gray-700 text-xs sm:text-sm">{item.treatment}</p>
+            <p className="text-gray-500 text-xs sm:text-sm">{item.posology}</p>
+          </ListItem>
         ))}
       </ul>
 
-      {/* Bouton Voir plus/moins */}
       {filteredTreatments.length > 5 && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full py-2 text-center text-blue-500 hover:text-blue-700 transition-colors duration-200"
-        >
+        <TextButton onClick={() => setShowAll(!showAll)}>
           {showAll ? 'Voir moins' : 'Voir plus'}
-        </button>
+        </TextButton>
       )}
-    </div>
+    </Card>
   );
 };
 
