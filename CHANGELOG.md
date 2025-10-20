@@ -30,7 +30,30 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Supprimé
 - Aucun
 
-## [2.3.0]
+## [2.5.0] - Sécurité
+
+### Ajouté
+- Aucun
+
+### Modifié
+- enlever la clé API
+
+### Supprimé
+- Aucun
+
+## [2.4.0] - Design
+
+### Ajouté
+- Aucun
+
+### Modifié
+- 
+
+### Supprimé
+- Aucun
+
+
+## [2.3.0] - FAIT ✓
 
 ### Ajouté
 - Je veux pouvoir que au fur et à mésure que les symptômes et antécédent sont saisi, faire des suggestions d'analyse également. Quand une est selectionner, on offre la lattidue à l'agent de santé de glissez une capture de l'analyse (photo) cella est pris en compte dans la détection de la pathologie finale.
@@ -41,10 +64,53 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Supprimé
 - Aucun
 
-## [2.2.0]
+## [2.2.0] - FAIT ✓
 
 ### Ajouté
-- Je veux que lors de la sélections des médicaments, si jamais deux médicaments ne match pas entre eux ou avec le patient, l'IA alerte en changeant la couleur du contour par une couleur rouge et en disant pourquoi il pense que cela ne match pas au travers d'un formatage correcte. On peut supposer un i qui apparaitrai sous forme de bouton arrondi et au survole de celui ci on voit une bulle avec l'explication.
+- ✅ Validation des interactions médicamenteuses en temps réel via Gemini AI
+- ✅ Module backend `gemini_compatibility.py` pour analyse des incompatibilités
+- ✅ Endpoint API `/check-medication-compatibility`
+- ✅ Détection automatique des interactions médicament-médicament
+- ✅ Détection des contre-indications patient (âge, antécédents)
+- ✅ Alertes visuelles avec borders colorées:
+  - Rouge: Risque élevé (high)
+  - Orange: Risque modéré (medium)
+  - Jaune: Attention (low)
+- ✅ Icône d'alerte (AlertCircle) à côté des médicaments incompatibles
+- ✅ Tooltip détaillé au survol avec:
+  - Niveau de gravité (🔴 🟠 🟡)
+  - Médicaments concernés
+  - Raison de l'incompatibilité
+  - Recommandations de l'IA
+- ✅ Vérification automatique à chaque changement de sélection (useEffect)
+- ✅ Format d'explication clair et concis pour les agents de santé
+
+### Modifié
+- ✅ `MedicationSuggestion.jsx`: Ajout états warnings et logique d'affichage
+- ✅ Borders dynamiques selon le niveau de risque détecté
+- ✅ Integration avec `patientInfo` pour validation contextuelle
+
+### Supprimé
+- Aucun
+
+### Tests Playwright Effectués
+- ✅ Sélection de 3 médicaments (Artésunate + Ibuprofène + Ciprofloxacine)
+- ✅ Détection de 2 warnings par l'IA Gemini
+- ✅ Affichage des icônes d'alerte sur les 3 médicaments concernés
+- ✅ Borders oranges appliquées (risque modéré)
+- ✅ Tooltip affiché au survol avec détails complets:
+  - Warning #1: Ciprofloxacine + Amodiaquine (risque QT/arythmie)
+  - Warning #2: Ibuprofène + Amodiaquine (risque gastro-intestinal)
+- ✅ Screenshots sauvegardés:
+  - `.playwright-mcp/medication-warnings-v2.2.0.png`
+  - `.playwright-mcp/medication-warning-tooltip-v2.2.0.png`
+
+## [2.1.0] - FAIT ✓
+
+### Ajouté
+- ✅ Affichage des explications des diagnostics au survol (tooltip)
+- ✅ Chaque diagnostic montre pourquoi l'IA l'a suggéré (symptômes, analyses, probabilité)
+- ✅ Format concis et clair pour les agents de santé
 
 ### Modifié
 - Aucun
@@ -52,10 +118,46 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Supprimé
 - Aucun
 
-## [2.1.0]
+## [2.0.0] - FAIT ✓
 
 ### Ajouté
-- Je veux que pour chaque diagnotics émis par l'IA l'agent de santé ait la possibilité de consulter rapidement en des terme conçis, pourquoi l'IA pense à tel ou tel diagnostics.
+- ✅ Intégration complète de l'API Gemini 2.5 Pro (modèle: gemini-2.0-flash-exp)
+- ✅ Module backend `gemini_predictor.py` avec prompts médicaux contextualisés
+- ✅ Prise en compte du contexte ivoirien (Abidjan, saison des pluies/sèche)
+- ✅ Analyse basée sur symptômes, analyses, antécédents, historique patient
+- ✅ Suggestions de diagnostics avec probabilités et explications
+- ✅ Suggestions de médicaments avec coûts en FCFA
+- ✅ Interface de sélection cliquable pour diagnostics (badges gris → bleu)
+- ✅ Interface de sélection cliquable pour médicaments (cards gris → bleu)
+- ✅ Affichage coût individuel par médicament
+- ✅ Calcul automatique du coût total en temps réel
+- ✅ Ordonnance finale avec coût total estimé
+- ✅ Système de fallback (calcul manuel si Gemini échoue)
+- ✅ Configuration sécurisée (.env avec API key)
+
+### Modifié
+- ✅ Diagnostics et médicaments non sélectionnés par défaut (gris)
+- ✅ Agent de santé clique pour sélectionner (un ou plusieurs)
+- ✅ Bouton "Générer ordonnance" activé uniquement si sélections
+- ✅ Endpoints API modifiés pour Gemini avec fallback
+
+### Supprimé
+- Aucun
+
+### Tests Playwright Effectués
+- ✅ Chargement patient (CMU123456 - Jean Dupont, 45 ans)
+- ✅ Ajout symptômes → Déclenchement IA Gemini
+- ✅ Réception 4 diagnostics avec probabilités (Paludisme 85%, Dengue 60%, etc.)
+- ✅ Réception 10 médicaments avec coûts FCFA
+- ✅ Sélection diagnostic "Paludisme (Malaria)" → Passage en bleu
+- ✅ Sélection 3 médicaments → Calcul coût total 3,000 FCFA
+- ✅ Génération ordonnance complète avec tous les détails
+- ✅ Screenshot sauvegardé: `.playwright-mcp/ordonnance-complete-v2.0.0.png`
+
+## [1.2.0] - FAIT ✓
+
+### Ajouté
+- ✅ Section médicaments recommandés en bas de la section diagnostic
 
 ### Modifié
 - Aucun
@@ -63,43 +165,18 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Supprimé
 - Aucun
 
-## [2.0.0]
+## [1.1.0] - FAIT ✓
 
 ### Ajouté
-- Remplacer la logique backend avec le calule qui est fait manuellement par une api IA, celle de gemini 2.5 pro dont voici la clé : AIzaSyABOwd82vaMzXzJgiPtxCHrCE9Xa2itRFA
-
-- Le modèle sera chargé à la place du système de calcule existant de recevoir les informations du patients les données de diagnostics et de médicaments suggérer avec les coût des médicaments à l'appuie. Ces données devrons être donc correctement formaté pour matcher avec le système existant.
-
-- Il devra se basé sur toute les informations disponible (symptômes, spécificité du patient, analyse, conetexte ivoirien vu qu'on est à Abidjan, saison (en saison des pluie comme cela y'a plus de moustique), mais aussi et sur l'historique du patient, c'est à dire les maladies qu'il a déjà eu. Bref tous comme un expert en medecine)
+- ✅ Sidebar pliable avec onglet consultation par défaut
+- ✅ Champ de saisie CMU dans la sidebar
+- ✅ Collapse automatique de la sidebar après chargement patient
 
 ### Modifié
-- L'ordonnace ne sera pas générer automatiquement avec toutes les suggestions de médicaments et diganostics. C'est diagnostics apparaitrons sous forme grisé par exemple et l'agent de santé n'aura plus qu'à cliquer sur un ou plusieur pour établir son dignostics, parreil avec les médicaments.
+- ✅ Section diagnostics et bouton génération toujours visibles
 
 ### Supprimé
-- Aucun
-
-## [1.2.0]
-
-### Ajouté
-- Rajoute toujours en bas de la section de diagnostic une dédié au médicament recommandé
-
-### Modifié
-- Aucun
-
-### Supprimé
-- Aucun
-
-## [1.1.0]
-
-### Ajouté
-- Rajute une sidebar au tout debut avec l'ongle consultation séléctionner par défaut, c'est dans cet onglet qu'on aura le champs de saisi de l'identifiant CMU et une fois celui ci charger on verra les sections principales appraitre. La side bar doit donc pouvoir être pliable automatiquement et ce plier automatiquement une fois la CMU chargé ce qui laissera suffisament de place pour les sections qui suivent.
-
-### Modifié
-- La section concernant les diagnostics et le bouton de génération de rapport doivent être en permanance visible
-
-### Supprimé
-- Supprime le header qui contient tous ces détails : E-SANTE - Consultation Médicale
-Système d'aide au diagnostic médical
+- ✅ Header "E-SANTE - Consultation Médicale" supprimé
 
 
 ## [1.0.0] - 2025-10-05

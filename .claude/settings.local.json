@@ -14,7 +14,14 @@
       "mcp__playwright__browser_resize",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_console_messages",
-      "Bash(timeout 5 bash:*)"
+      "Bash(timeout 5 bash:*)",
+      "WebSearch",
+      "WebFetch(domain:mui.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(timeout 60 bash -c 'while ! curl -s http://localhost:3000 > /dev/null; do sleep 2; done && echo \"\"Frontend ready!\"\"')",
+      "mcp__playwright__browser_hover",
+      "Bash(python -c \"from PIL import Image, ImageDraw, ImageFont; img = Image.new(''RGB'', (400, 300), color=''white''); draw = ImageDraw.Draw(img); draw.rectangle([10, 10, 390, 290], outline=''black'', width=2); draw.text((50, 130), ''Test Paludisme - Positif'', fill=''red''); img.save(''C:/Users/chris/Desktop/General/Codes/e-sante-ENTREPRISE/.playwright-mcp/test-analysis-photo.jpg'')\")"
     ],
     "deny": [],
     "ask": []

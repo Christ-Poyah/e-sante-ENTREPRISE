@@ -110,9 +110,21 @@ const PrescriptionModal = ({ prescription, onClose }) => {
                     <p className="text-sm text-gray-700">
                       <span className="font-medium">Posologie:</span> {medication.dosage}
                     </p>
+                    {medication.cost > 0 && (
+                      <p className="text-sm text-green-700 font-semibold mt-1">
+                        <span className="font-medium">Coût estimé:</span> {medication.cost.toLocaleString()} FCFA
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
+              {prescription.medications.some(m => m.cost > 0) && (
+                <div className="mt-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+                  <p className="text-lg font-bold text-green-800">
+                    Coût Total Estimé: {prescription.medications.reduce((sum, m) => sum + (m.cost || 0), 0).toLocaleString()} FCFA
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

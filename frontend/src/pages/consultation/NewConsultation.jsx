@@ -10,6 +10,7 @@ import MedicationSuggestion from "../../components/consultation/NewConsultation/
 import PrescriptionModal from '../../components/consultation/NewConsultation/PrescriptionModal';
 import PatientSearch from '../../components/consultation/NewConsultation/PatientSearch';
 import Sidebar from '../../components/ui/Sidebar';
+import AnalysisSuggestionComponent from '../../components/consultation/NewConsultation/AnalysisSuggestionComponent';
 
 
 
@@ -69,6 +70,10 @@ export default function NewConsultation() {
   const [medications, setMedications] = useState([]);
   const [prescription, setPrescription] = useState(null);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [selectedDiagnostics, setSelectedDiagnostics] = useState([]);
+  const [selectedMedications, setSelectedMedications] = useState([]);
+  const [analysisSuggestions, setAnalysisSuggestions] = useState([]);
+  const [suggestedAnalyses, setSuggestedAnalyses] = useState([]);
 
   // Données statiques (gardez toutes les données existantes)
   const symptoms = [
@@ -240,7 +245,11 @@ export default function NewConsultation() {
           },
           body: JSON.stringify({
             ...formData,
-            recentDiseases: patientData.recentDiseases
+            recentDiseases: patientData.recentDiseases,
+            patientInfo: patient ? {
+              age: patient.age,
+              gender: patient.gender || 'Non spécifié'
+            } : null
           })
         });
 
@@ -261,8 +270,14 @@ export default function NewConsultation() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            medicalHistory: formData.medicalHistory,
             symptoms: formData.symptoms,
-            analyses: formData.analyses
+            analyses: formData.analyses,
+            recentDiseases: patientData.recentDiseases,
+            patientInfo: patient ? {
+              age: patient.age,
+              gender: patient.gender || 'Non spécifié'
+            } : null
           })
         });
 
@@ -271,6 +286,39 @@ export default function NewConsultation() {
         setMedications(data.medications || []);
       } catch (error) {
         console.error('Erreur lors de la récupération des médicaments:', error);
+      }
+    };
+
+    const fetchAnalysisSuggestions = async () => {
+      if (!isAIEnabled) return;
+      if (selectedSymptoms.length === 0 && medicalHistory.length === 0) {
+        setAnalysisSuggestions([]);
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:8001/suggest-analyses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            symptoms: selectedSymptoms,
+            medicalHistory: medicalHistory,
+            patientInfo: patient ? {
+              age: patient.age,
+              gender: patient.gender || 'Non spécifié'
+            } : null
+          })
+        });
+
+        const data = await response.json();
+        console.log("Suggestions d'analyses:", data);
+        if (data.suggestions) {
+          setAnalysisSuggestions(data.suggestions);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des suggestions d\'analyses:', error);
       }
     };
   
@@ -282,6 +330,14 @@ export default function NewConsultation() {
   
     const areAllItemsComplete = (items) => items.every(hasAllDetailsCompleted);
   
+    // useEffect pour déclencher les suggestions d'analyses dès que symptômes ou antécédents changent
+    useEffect(() => {
+      if (!isAIEnabled) return;
+      if (selectedSymptoms.length > 0 || medicalHistory.length > 0) {
+        fetchAnalysisSuggestions();
+      }
+    }, [selectedSymptoms, medicalHistory, isAIEnabled, patient]);
+
     useEffect(() => {
       if (!isAIEnabled) return;
 
@@ -344,6 +400,32 @@ export default function NewConsultation() {
       }
       setSelectedAnalyses(newAnalyses);
     };
+
+    // Handler pour les analyses suggérées sélectionnées (avec photos)
+    const handleSuggestedAnalysesSelect = (selectedWithPhotos) => {
+      console.log("Analyses suggérées sélectionnées:", selectedWithPhotos);
+      setSuggestedAnalyses(selectedWithPhotos);
+
+      // Fusionner avec les analyses déjà sélectionnées manuellement
+      // Les analyses suggérées ont priorité si elles ont des photos
+      const mergedAnalyses = [...selectedAnalyses];
+
+      selectedWithPhotos.forEach(suggestedAnalysis => {
+        const existingIndex = mergedAnalyses.findIndex(a => a.name === suggestedAnalysis.name);
+        if (existingIndex >= 0) {
+          // Mettre à jour l'analyse existante avec la photo
+          mergedAnalyses[existingIndex] = {
+            ...mergedAnalyses[existingIndex],
+            photo: suggestedAnalysis.photo
+          };
+        } else {
+          // Ajouter la nouvelle analyse
+          mergedAnalyses.push(suggestedAnalysis);
+        }
+      });
+
+      setSelectedAnalyses(mergedAnalyses);
+    };
   
     // Récupération du traitement une fois qu'un diagnostic est disponible
     useEffect(() => {
@@ -381,8 +463,18 @@ export default function NewConsultation() {
     }, [diagnostics, medicalHistory, selectedSymptoms, selectedAnalyses, isAIEnabled]);
 
     const handleGeneratePrescription = async () => {
-      if (!patient || !diagnostics || diagnostics.length === 0) {
-        alert("Veuillez d'abord établir un diagnostic pour le patient.");
+      if (!patient) {
+        alert("Veuillez d'abord charger un patient.");
+        return;
+      }
+
+      if (!selectedDiagnostics || selectedDiagnostics.length === 0) {
+        alert("Veuillez sélectionner au moins un diagnostic.");
+        return;
+      }
+
+      if (!selectedMedications || selectedMedications.length === 0) {
+        alert("Veuillez sélectionner au moins un médicament.");
         return;
       }
 
@@ -393,10 +485,10 @@ export default function NewConsultation() {
           age: patient.age,
           cmuNumber: patient.cmuNumber
         },
-        diagnostic: diagnostics[0]?.disease || "Non défini",
-        treatment: treatment?.treatment || "Traitement non défini",
-        posology: treatment?.posology || "Posologie non définie",
-        medications: medications,
+        diagnostic: selectedDiagnostics.map(d => d.disease).join(', '),
+        treatment: treatment?.treatment || "Traitement selon diagnostic",
+        posology: treatment?.posology || "Voir posologie des médicaments",
+        medications: selectedMedications,
         consultationDate: new Date().toISOString()
       };
 
@@ -462,6 +554,16 @@ export default function NewConsultation() {
                       />
                     </div>
 
+                    {analysisSuggestions.length > 0 && (
+                      <div className="mb-6">
+                        <AnalysisSuggestionComponent
+                          suggestions={analysisSuggestions}
+                          onAnalysisSelect={handleSuggestedAnalysesSelect}
+                          title="Analyses suggérées par l'IA"
+                        />
+                      </div>
+                    )}
+
                     <div className="mb-6">
                       <AnalysisSelector
                         availableAnalyses={analyses}
@@ -475,11 +577,18 @@ export default function NewConsultation() {
                     <DiagnosticComponent
                       diagnostics={diagnostics}
                       title="Diagnostic suggéré :"
+                      onSelectionChange={setSelectedDiagnostics}
                     />
 
                     <MedicationSuggestion
                       medications={medications}
                       title="Médicaments recommandés :"
+                      onSelectionChange={setSelectedMedications}
+                      patientInfo={patient ? {
+                        age: patient.age,
+                        gender: patient.gender || 'Non spécifié',
+                        medicalHistory: medicalHistory
+                      } : null}
                     />
 
                     <DiseaseRiskDisplay diseases={diseaseRisks} />
@@ -506,9 +615,9 @@ export default function NewConsultation() {
                   <div className="bg-white rounded-xl shadow p-4">
                     <button
                       onClick={handleGeneratePrescription}
-                      disabled={!patient || diagnostics.length === 0 || medications.length === 0}
+                      disabled={!patient || selectedDiagnostics.length === 0 || selectedMedications.length === 0}
                       className={`w-full px-4 py-3 text-white font-semibold rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center justify-center gap-2 ${
-                        !patient || diagnostics.length === 0 || medications.length === 0
+                        !patient || selectedDiagnostics.length === 0 || selectedMedications.length === 0
                           ? 'bg-gray-400 cursor-not-allowed'
                           : 'bg-green-600 hover:bg-green-700'
                       }`}
@@ -518,6 +627,11 @@ export default function NewConsultation() {
                       </svg>
                       Générer l'ordonnance
                     </button>
+                    {patient && (selectedDiagnostics.length === 0 || selectedMedications.length === 0) && (
+                      <p className="text-xs text-gray-500 mt-2 text-center">
+                        Sélectionnez des diagnostics et médicaments
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
