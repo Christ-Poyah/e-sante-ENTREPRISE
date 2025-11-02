@@ -4,7 +4,7 @@ import { Section, Badge, AddButton } from '../../ui';
 const AnalysisSelector = ({
   availableAnalyses,
   onAnalysesChange,
-  title = "Analyse :",
+  title = "Analyse",
   placeholders = {
     name: "Nom de l'analyse",
     result: "Résultat"

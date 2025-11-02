@@ -4,7 +4,7 @@ import { AlertCircle } from 'lucide-react';
 
 const MedicationSuggestion = ({
   medications,
-  title = "Médicaments recommandés :",
+  title = "Médicaments recommandés",
   onSelectionChange,
   patientInfo
 }) => {
@@ -98,81 +98,68 @@ const MedicationSuggestion = ({
       {!medications || medications.length === 0 ? (
         <p className="text-gray-500 text-sm">Aucun médicament recommandé</p>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-wrap gap-2">
           {medications.map((medication) => {
             const selected = isSelected(medication.id);
             const medWarnings = getMedicationWarnings(medication.id);
             const hasWarning = medWarnings.length > 0;
-            const borderColor = getBorderColor(medication.id, selected);
 
             return (
-              <div
-                key={medication.id}
-                onClick={() => toggleMedication(medication)}
-                className={`
-                  p-4 rounded-lg border-l-4 transition-all duration-200
-                  cursor-pointer hover:shadow-md
-                  ${selected ? 'bg-blue-50' : 'bg-gray-50'}
-                  ${borderColor}
-                `}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className={`font-bold text-sm sm:text-base ${selected ? 'text-blue-700' : 'text-gray-700'}`}>
-                        {medication.name}
-                      </h3>
-                      {hasWarning && (
-                        <div className="group relative">
-                          <button
-                            type="button"
-                            onClick={(e) => e.stopPropagation()}
-                            className="p-1 rounded-full bg-red-100 hover:bg-red-200 transition-colors"
-                          >
-                            <AlertCircle className="w-4 h-4 text-red-600" />
-                          </button>
-                          <div className="absolute left-0 top-full mt-2 w-80 p-3 bg-white border-2 border-red-300 rounded-lg shadow-lg z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                            <p className="text-xs font-bold text-red-700 mb-2">⚠️ Avertissements</p>
-                            <div className="space-y-2">
-                              {medWarnings.map((warning, idx) => (
-                                <div key={idx} className="text-xs">
-                                  <p className="font-semibold text-gray-800">
-                                    {warning.severity === 'high' && '🔴 RISQUE ÉLEVÉ'}
-                                    {warning.severity === 'medium' && '🟠 RISQUE MODÉRÉ'}
-                                    {warning.severity === 'low' && '🟡 ATTENTION'}
-                                  </p>
-                                  <p className="text-gray-700 mt-1"><strong>Médicaments:</strong> {warning.medication_names.join(', ')}</p>
-                                  <p className="text-gray-600 mt-1">{warning.reason}</p>
-                                  {warning.recommendation && (
-                                    <p className="text-blue-600 mt-1"><strong>Recommandation:</strong> {warning.recommendation}</p>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                      <span className="font-medium">Indication:</span> {medication.indication}
+              <div key={medication.id} className="relative group">
+                <button
+                  onClick={() => toggleMedication(medication)}
+                  className={`
+                    px-4 py-2 rounded-full text-sm font-medium
+                    border-2 transition-all duration-200
+                    cursor-pointer hover:shadow-md
+                    ${selected
+                      ? 'bg-blue-100 text-blue-700 border-blue-500'
+                      : hasWarning
+                        ? 'bg-red-50 text-red-700 border-red-400 hover:border-red-500'
+                        : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-gray-400'
+                    }
+                  `}
+                >
+                  {hasWarning && '⚠️ '}
+                  {medication.name}
+                  {medication.cost > 0 && (
+                    <span className="ml-2 text-xs opacity-75">
+                      ({medication.cost.toLocaleString()} FCFA)
+                    </span>
+                  )}
+                  {selected && <span className="ml-1">✓</span>}
+                </button>
+
+                {/* Tooltip avec détails (apparaît au survol) */}
+                <div className="absolute left-0 top-full mt-2 w-80 p-3 bg-white border-2 border-gray-300 rounded-lg shadow-xl z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                  <div className="text-xs space-y-2">
+                    <p className="font-semibold text-gray-900">{medication.name}</p>
+                    <p className="text-xs text-gray-500">{medication.category}</p>
+                    <p className="text-gray-700">
+                      <span className="font-semibold">Indication:</span> {medication.indication}
                     </p>
-                    <p className="text-xs sm:text-sm text-gray-700 mt-1">
-                      <span className="font-medium">Posologie:</span> {medication.dosage}
+                    <p className="text-gray-700">
+                      <span className="font-semibold">Posologie:</span> {medication.dosage}
                     </p>
                     {medication.cost > 0 && (
-                      <p className="text-xs sm:text-sm text-green-700 font-semibold mt-2">
-                        Coût estimé: {medication.cost.toLocaleString()} FCFA
+                      <p className="text-green-700 font-semibold">
+                        Coût: {medication.cost.toLocaleString()} FCFA
                       </p>
                     )}
-                  </div>
-                  <div className="flex flex-col gap-1 items-end">
-                    <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                      selected ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {medication.category}
-                    </span>
-                    {selected && (
-                      <span className="text-xs text-blue-600 font-medium">✓ Sélectionné</span>
+                    {hasWarning && (
+                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                        <p className="text-xs font-bold text-red-700 mb-1">⚠️ Avertissements</p>
+                        {medWarnings.map((warning, idx) => (
+                          <div key={idx} className="text-xs mt-1">
+                            <p className="font-semibold text-gray-800">
+                              {warning.severity === 'high' && '🔴 RISQUE ÉLEVÉ'}
+                              {warning.severity === 'medium' && '🟠 RISQUE MODÉRÉ'}
+                              {warning.severity === 'low' && '🟡 ATTENTION'}
+                            </p>
+                            <p className="text-gray-600 mt-1">{warning.reason}</p>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

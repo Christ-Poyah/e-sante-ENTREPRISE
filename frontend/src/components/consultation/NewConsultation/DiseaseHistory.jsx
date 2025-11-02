@@ -3,7 +3,7 @@ import { Card, SectionTitle, SearchInput, ListItem, TextButton } from '../../ui'
 
 const DiseaseHistory = ({
   recentDiseases,
-  title = "Historique récent :",
+  title = "Historique récent",
   placeholder = "Rechercher dans l'historique..."
 }) => {
   const [searchTerm, setSearchTerm] = useState('');

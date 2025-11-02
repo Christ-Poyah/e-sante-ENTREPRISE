@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Section, Badge, AddButton } from '../../ui';
 
-const AntecedentSelector = ({ 
+const AntecedentSelector = ({
   initialAntecedents,
   onAntecedentsChange,
   placeholder = "Saisissez un antécédent",
-  title = "Antécédents médicaux :",
+  title = "Antécédents médicaux",
 }) => {
   const [selectedAntecedents, setSelectedAntecedents] = useState([]);
   const [availableAntecedents, setAvailableAntecedents] = useState(initialAntecedents);

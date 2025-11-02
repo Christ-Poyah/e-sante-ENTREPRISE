@@ -75,6 +75,11 @@ export default function NewConsultation() {
   const [analysisSuggestions, setAnalysisSuggestions] = useState([]);
   const [suggestedAnalyses, setSuggestedAnalyses] = useState([]);
 
+  // États de chargement
+  const [loadingAnalysisSuggestions, setLoadingAnalysisSuggestions] = useState(false);
+  const [loadingDiagnostics, setLoadingDiagnostics] = useState(false);
+  const [loadingMedications, setLoadingMedications] = useState(false);
+
   // Données statiques (gardez toutes les données existantes)
   const symptoms = [
     {
@@ -237,6 +242,7 @@ export default function NewConsultation() {
   };
 
   const sendDataToAPI = async (formData) => {
+      setLoadingDiagnostics(true);
       try {
         const response = await fetch('http://localhost:8001/diagnostic', {
           method: 'POST',
@@ -259,10 +265,13 @@ export default function NewConsultation() {
         setDiseaseRisks(data.diseaseRisks || []);
       } catch (error) {
         console.error('Erreur lors de l\'envoi des données:', error);
+      } finally {
+        setLoadingDiagnostics(false);
       }
     };
 
     const fetchMedicationSuggestions = async (formData) => {
+      setLoadingMedications(true);
       try {
         const response = await fetch('http://localhost:8001/suggest-medications', {
           method: 'POST',
@@ -286,6 +295,8 @@ export default function NewConsultation() {
         setMedications(data.medications || []);
       } catch (error) {
         console.error('Erreur lors de la récupération des médicaments:', error);
+      } finally {
+        setLoadingMedications(false);
       }
     };
 
@@ -296,6 +307,7 @@ export default function NewConsultation() {
         return;
       }
 
+      setLoadingAnalysisSuggestions(true);
       try {
         const response = await fetch('http://localhost:8001/suggest-analyses', {
           method: 'POST',
@@ -319,6 +331,8 @@ export default function NewConsultation() {
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des suggestions d\'analyses:', error);
+      } finally {
+        setLoadingAnalysisSuggestions(false);
       }
     };
   
@@ -554,6 +568,16 @@ export default function NewConsultation() {
                       />
                     </div>
 
+                    {loadingAnalysisSuggestions && (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                        <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-sm text-blue-700 font-medium">L'IA analyse les symptômes et suggère des analyses...</span>
+                      </div>
+                    )}
+
                     {analysisSuggestions.length > 0 && (
                       <div className="mb-6">
                         <AnalysisSuggestionComponent
@@ -568,21 +592,41 @@ export default function NewConsultation() {
                       <AnalysisSelector
                         availableAnalyses={analyses}
                         onAnalysesChange={handleAnalysesChange}
-                        title="Analyses médicales :"
+                        title="Analyses médicales"
                         placeholders={placeholders}
                         translations={translations}
                       />
                     </div>
 
+                    {loadingDiagnostics && (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                        <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-sm text-blue-700 font-medium">L'IA analyse les données et établit un diagnostic...</span>
+                      </div>
+                    )}
+
                     <DiagnosticComponent
                       diagnostics={diagnostics}
-                      title="Diagnostic suggéré :"
+                      title="Diagnostic suggéré"
                       onSelectionChange={setSelectedDiagnostics}
                     />
 
+                    {loadingMedications && (
+                      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                        <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span className="text-sm text-blue-700 font-medium">L'IA suggère des médicaments adaptés...</span>
+                      </div>
+                    )}
+
                     <MedicationSuggestion
                       medications={medications}
-                      title="Médicaments recommandés :"
+                      title="Médicaments recommandés"
                       onSelectionChange={setSelectedMedications}
                       patientInfo={patient ? {
                         age: patient.age,
@@ -603,11 +647,11 @@ export default function NewConsultation() {
                       <PatientInfo patient={patient} />
                       <DiseaseHistory
                         recentDiseases={patientData.recentDiseases}
-                        title="Historique récent :"
+                        title="Historique récent"
                       />
                       <TreatmentComponent
                         treatments={treatment ? [treatment] : []}
-                        title="Traitement proposé :"
+                        title="Traitement proposé"
                       />
                     </>
                   )}
@@ -627,11 +671,20 @@ export default function NewConsultation() {
                       </svg>
                       Générer l'ordonnance
                     </button>
-                    {patient && (selectedDiagnostics.length === 0 || selectedMedications.length === 0) && (
-                      <p className="text-xs text-gray-500 mt-2 text-center">
-                        Sélectionnez des diagnostics et médicaments
-                      </p>
-                    )}
+                    <div className="mt-2 text-xs text-center">
+                      {!patient && (
+                        <p className="text-gray-500">Chargez un patient</p>
+                      )}
+                      {patient && selectedDiagnostics.length === 0 && (
+                        <p className="text-orange-600">Sélectionnez au moins un diagnostic</p>
+                      )}
+                      {patient && selectedDiagnostics.length > 0 && selectedMedications.length === 0 && (
+                        <p className="text-orange-600">Sélectionnez au moins un médicament</p>
+                      )}
+                      {patient && selectedDiagnostics.length > 0 && selectedMedications.length > 0 && (
+                        <p className="text-green-600 font-medium">✓ Prêt à générer l'ordonnance</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

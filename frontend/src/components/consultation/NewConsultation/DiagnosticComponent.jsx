@@ -3,7 +3,7 @@ import { Section } from '../../ui';
 
 const DiagnosticComponent = ({
   diagnostics,
-  title = "Diagnostic suggéré :",
+  title = "Diagnostic suggéré",
   onSelectionChange
 }) => {
   const [selectedDiagnostics, setSelectedDiagnostics] = useState([]);

@@ -4,7 +4,7 @@ import { Card, SectionTitle, SearchInput, ListItem, TextButton } from '../../ui'
 
 const TreatmentComponent = ({
   treatments,
-  title = "Traitement proposé :",
+  title = "Traitement proposé",
   placeholder = "Rechercher un traitement..."
 }) => {
   const safeTreatments = treatments || [];

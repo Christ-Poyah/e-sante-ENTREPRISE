@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Section, Badge, AddButton } from '../../ui';
 
-const SymptomSelector = ({ 
+const SymptomSelector = ({
   initialSymptoms,
   onSymptomsChange,
   placeholder = "Saisissez un symptôme",
-  title = "Symptômes :",
+  title = "Symptômes",
 }) => {
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [availableSymptoms, setAvailableSymptoms] = useState(initialSymptoms);

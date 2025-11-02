@@ -132,54 +132,72 @@ const AnalysisSuggestionComponent = ({ suggestions, onAnalysisSelect, title = "A
     return null;
   }
 
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'high':
+        return '🔴';
+      case 'medium':
+        return '🟠';
+      case 'low':
+        return '🟡';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Section title={title}>
-      <p className="text-sm text-gray-600 mb-4">
-        Cliquez sur une analyse pour la sélectionner et ajouter éventuellement une photo du résultat
-      </p>
-      <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion) => {
           const selected = isSelected(suggestion.id);
           const hasPhoto = analysisPhotos[suggestion.id];
 
           return (
-            <div
-              key={suggestion.id}
-              className={`
-                p-4 rounded-lg border-l-4 transition-all duration-200
-                cursor-pointer
-                ${selected ? 'bg-blue-50 border-blue-500' : getPriorityColor(suggestion.priority)}
-              `}
-            >
-              <div onClick={() => toggleAnalysis(suggestion)}>
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1">
-                    <h3 className={`font-bold text-sm sm:text-base ${selected ? 'text-blue-700' : 'text-gray-700'}`}>
-                      {suggestion.name}
-                    </h3>
-                    <span className="inline-block px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 mt-1">
-                      {suggestion.category}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    {getPriorityBadge(suggestion.priority)}
-                    {selected && (
-                      <span className="text-xs text-blue-600 font-medium">✓ Sélectionnée</span>
-                    )}
-                  </div>
-                </div>
-                <p className="text-xs sm:text-sm text-gray-600 mt-2">
-                  <span className="font-medium">Raison:</span> {suggestion.reason}
+            <div key={suggestion.id} className="relative group">
+              <button
+                onClick={() => toggleAnalysis(suggestion)}
+                className={`
+                  px-4 py-2 rounded-full text-sm font-medium
+                  border-2 transition-all duration-200
+                  cursor-pointer hover:shadow-md
+                  ${selected
+                    ? 'bg-blue-100 text-blue-700 border-blue-500'
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:border-gray-400'
+                  }
+                `}
+              >
+                {getPriorityIcon(suggestion.priority)} {suggestion.name}
+                {selected && <span className="ml-1">✓</span>}
+              </button>
+
+              {/* Tooltip avec la raison (apparaît au survol) */}
+              <div className="absolute left-0 top-full mt-2 w-96 p-3 bg-white border-2 border-gray-300 rounded-lg shadow-xl z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+                <p className="text-xs text-gray-700">
+                  <span className="font-semibold text-gray-900">{suggestion.name}</span><br/>
+                  <span className="text-xs text-gray-500">{suggestion.category} • {getPriorityBadge(suggestion.priority)}</span><br/><br/>
+                  <span className="font-semibold">Raison:</span> {suggestion.reason}
                 </p>
               </div>
 
-              {selected && (
-                <div className="mt-4 pt-4 border-t border-blue-200" onClick={(e) => e.stopPropagation()}>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Section d'upload de photos pour les analyses sélectionnées */}
+      {selectedAnalyses.length > 0 && (
+        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="text-sm font-semibold text-blue-700 mb-3">Photos des analyses (optionnel)</h3>
+          <div className="space-y-4">
+            {selectedAnalyses.map((analysis) => {
+              const hasPhoto = analysisPhotos[analysis.id];
+              return (
+                <div key={analysis.id} className="bg-white p-3 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-blue-700">Photo de l'analyse (optionnel)</p>
+                    <p className="text-sm font-medium text-gray-700">{analysis.name}</p>
                     {hasPhoto && (
                       <button
-                        onClick={() => removePhoto(suggestion.id)}
+                        onClick={() => removePhoto(analysis.id)}
                         className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 transition-colors"
                       >
                         <X className="w-4 h-4" />
@@ -189,47 +207,35 @@ const AnalysisSuggestionComponent = ({ suggestions, onAnalysisSelect, title = "A
                   </div>
 
                   {!hasPhoto ? (
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 text-blue-500 mb-2" />
-                        <p className="text-sm text-blue-600 font-medium">Cliquez pour uploader une photo</p>
-                        <p className="text-xs text-gray-500 mt-1">PNG, JPG, JPEG (max 5MB)</p>
+                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                      <div className="flex flex-col items-center justify-center">
+                        <Upload className="w-6 h-6 text-blue-500 mb-1" />
+                        <p className="text-xs text-blue-600 font-medium">Ajouter une photo</p>
                       </div>
                       <input
                         type="file"
                         className="hidden"
                         accept="image/*"
-                        onChange={(e) => handlePhotoUpload(suggestion.id, e)}
+                        onChange={(e) => handlePhotoUpload(analysis.id, e)}
                       />
                     </label>
                   ) : (
                     <div className="relative">
                       <img
                         src={hasPhoto}
-                        alt={`Analyse ${suggestion.name}`}
-                        className="w-full h-48 object-contain rounded-lg border-2 border-blue-300"
+                        alt={`Analyse ${analysis.name}`}
+                        className="w-full h-32 object-contain rounded-lg border-2 border-blue-300"
                       />
                       <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
                         <FileImage className="w-3 h-3" />
-                        Photo ajoutée
+                        ✓
                       </div>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {selectedAnalyses.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-700 font-medium">
-            {selectedAnalyses.length} analyse{selectedAnalyses.length > 1 ? 's' : ''} sélectionnée{selectedAnalyses.length > 1 ? 's' : ''}
-          </p>
-          <p className="text-xs text-blue-600 mt-1">
-            {Object.keys(analysisPhotos).length} photo{Object.keys(analysisPhotos).length > 1 ? 's' : ''} ajoutée{Object.keys(analysisPhotos).length > 1 ? 's' : ''}
-          </p>
+              );
+            })}
+          </div>
         </div>
       )}
     </Section>
